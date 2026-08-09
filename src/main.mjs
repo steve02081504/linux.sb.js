@@ -4,13 +4,14 @@ import { css as linkifyCss } from './linkify/linkify.mjs'
 import { css as markdownCss } from './markdown/markdown.mjs'
 import { collapseOrders, css as ordersCss } from './orders/orders.mjs'
 import { processAll } from './post/post.mjs'
+import { css as shikiCss } from './shiki/shiki.mjs'
 import { installSubmit } from './submit/submit.mjs'
 import { css as themeCss, syncThemeSwitch } from './theme/theme.mjs'
 import { css as tipCss, initTip } from './tip/tip.mjs'
 
 if (syncThemeSwitch()) {
 	const style = document.createElement('style')
-	style.textContent = [themeCss, markdownCss, linkifyCss, tipCss, githubCss, ordersCss].join('\n')
+	style.textContent = [themeCss, shikiCss, markdownCss, linkifyCss, tipCss, githubCss, ordersCss].join('\n')
 	document.documentElement.appendChild(style)
 
 	/**

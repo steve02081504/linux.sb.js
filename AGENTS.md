@@ -132,4 +132,5 @@ build.mjs               # → tab 缩进的 linux.sb.user.js（细节见 docs/bu
 - 站点主题插件注入 `:root{--bg…}`；脚本勿再 `html.lsb-dark` 覆盖整套变量
 - tip / GitHub 卡用 `--panel` / `--card-bg` / `--text` / `--line` 等，勿用 `Canvas` / `CanvasText`（跟 OS 不跟站点）
 - 溢出容器滑块：`scrollbar-color` + `::-webkit-scrollbar-*` 绑 `--text-muted` / `--line` / `--bg-soft`；系统默认常跟 OS 明暗
+- Shiki：样式与 `renderShikiPre` / `highlightCode` 在 `src/shiki/`；Markdown 与 GitHub 文件预览共用；勿给 `.line` 设 `display:block`（Shiki 靠行间 `\n`，会撑高行距）
 - `themeSwitchSeen` 在 GM 存储；清站点 localStorage 不会重置引导

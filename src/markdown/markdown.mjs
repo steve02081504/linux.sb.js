@@ -1,4 +1,4 @@
-import { loadCodeToHtml, siteIsDark } from '../shiki/shiki.mjs'
+import { highlightCode } from '../shiki/shiki.mjs'
 
 import css from './markdown.css'
 
@@ -269,15 +269,8 @@ function rehypeShiki(visit, fromHtml, toString) {
 			if (lang === 'mermaid') return
 			targets.push({ index, parent, lang, text: toString(code).replace(/\n$/, '') })
 		})
-		const codeToHtml = await loadCodeToHtml()
-		const theme = siteIsDark() ? 'github-dark' : 'github-light'
 		for (const t of [...targets].sort((a, b) => b.index - a.index)) {
-			let html
-			try {
-				html = await codeToHtml(t.text, { lang: t.lang, theme })
-			} catch {
-				html = await codeToHtml(t.text, { lang: 'text', theme })
-			}
+			const html = await highlightCode(t.text, t.lang)
 			const nodes = fromHtml(html, { fragment: true }).children
 			t.parent.children.splice(t.index, 1, ...nodes)
 		}

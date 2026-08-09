@@ -1,0 +1,19 @@
+/* Markdown / GitHub 共用：跟 Shiki 默认结构走，勿给 .line 设 display:block */
+pre.shiki{
+	overflow:auto;
+	padding:.75em 1em;
+	border-radius:8px;
+}
+pre.shiki.lsb-ln{
+	counter-reset:lsb-ln calc(var(--lsb-ln-start, 1) - 1);
+}
+pre.shiki.lsb-ln .line::before{
+	counter-increment:lsb-ln;
+	content:counter(lsb-ln);
+	display:inline-block;
+	width:2.5em;
+	margin-right:1.2em;
+	text-align:right;
+	color:var(--text-disabled);
+	user-select:none;
+}

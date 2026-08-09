@@ -324,7 +324,13 @@
 		return task;
 	}
 
+	// src/shiki/shiki.css
+	var shiki_default = "/* Markdown / GitHub \u5171\u7528\uFF1A\u8DDF Shiki \u9ED8\u8BA4\u7ED3\u6784\u8D70\uFF0C\u52FF\u7ED9 .line \u8BBE display:block */\npre.shiki{\n	overflow:auto;\n	padding:.75em 1em;\n	border-radius:8px;\n}\npre.shiki.lsb-ln{\n	counter-reset:lsb-ln calc(var(--lsb-ln-start, 1) - 1);\n}\npre.shiki.lsb-ln .line::before{\n	counter-increment:lsb-ln;\n	content:counter(lsb-ln);\n	display:inline-block;\n	width:2.5em;\n	margin-right:1.2em;\n	text-align:right;\n	color:var(--text-disabled);\n	user-select:none;\n}\n";
+
 	// src/shiki/shiki.mjs
+	/**
+	 *
+	 */
 	var SHIKI_URL = "https://esm.sh/shiki@3";
 	/** @type {Promise<Function> | null} */
 	var codeToHtmlCache = null;
@@ -385,9 +391,56 @@
 		const dot = base.lastIndexOf(".");
 		return dot < 0 ? "text" : base.slice(dot + 1) || "text";
 	}
+	/**
+	 * 高亮失败时的纯文本 `<pre class="shiki">`（可选行号结构与高亮一致）。
+	 * @param {string} text 源码
+	 * @param {number} [lineStart] 起始行号；有则加 `.lsb-ln`
+	 * @returns {HTMLPreElement}
+	 */
+	function plainPre(text, lineStart) {
+		const pre = document.createElement("pre");
+		pre.className = lineStart != null ? "shiki lsb-ln" : "shiki";
+		if (lineStart != null) {
+			pre.style.setProperty("--lsb-ln-start", String(lineStart));
+			const code = document.createElement("code");
+			const lines = text.split("\n");
+			for (let index = 0; index < lines.length; index++) {
+				if (index) code.append(document.createTextNode("\n"));
+				const line = document.createElement("span");
+				line.className = "line";
+				line.textContent = lines[index] || " ";
+				code.append(line);
+			}
+			pre.append(code);
+		} else
+			pre.textContent = text;
+		return pre;
+	}
+	/**
+	 * 渲染与 Markdown 代码块同结构的 Shiki `<pre>`。
+	 * @param {string} text 源码
+	 * @param {string} [lang='text'] 语言
+	 * @param {{lineStart?: number}} [options] `lineStart` 有则显示行号
+	 * @returns {Promise<HTMLPreElement>}
+	 */
+	async function renderShikiPre(text, lang = "text", options = {}) {
+		const { lineStart } = options;
+		try {
+			const template = document.createElement("template");
+			template.innerHTML = await highlightCode(text, lang);
+			const pre = template.content.querySelector("pre");
+			if (lineStart != null) {
+				pre.classList.add("lsb-ln");
+				pre.style.setProperty("--lsb-ln-start", String(lineStart));
+			}
+			return pre;
+		} catch {
+			return plainPre(text, lineStart);
+		}
+	}
 
 	// src/github/github.css
-	var github_default = ".lsb-gh{\n	display:block;\n	margin:.55em 0;\n	max-width:min(100%,720px);\n}\n.lsb-gh-card{\n	margin-top:.45em;\n	padding:10px 12px;\n	border:1px solid var(--line);\n	border-radius:10px;\n	background:var(--card-bg);\n	color:var(--text);\n	font:13px/1.45 system-ui,sans-serif;\n}\n.lsb-gh-card.lsb-gh-loading{opacity:.7}\n.lsb-gh-head{\n	display:flex;\n	flex-wrap:wrap;\n	gap:6px 10px;\n	align-items:baseline;\n}\n.lsb-gh-name{font-weight:700;word-break:break-word}\n.lsb-gh-meta{\n	margin-top:4px;\n	color:var(--text-muted);\n	font-size:12px;\n}\n.lsb-gh-desc{\n	margin-top:6px;\n	color:var(--text-subtle);\n	white-space:pre-wrap;\n	word-break:break-word;\n}\n.lsb-gh-stats{\n	display:flex;\n	flex-wrap:wrap;\n	gap:8px 12px;\n	margin-top:8px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n.lsb-gh-topics{\n	display:flex;\n	flex-wrap:wrap;\n	gap:4px;\n	margin-top:8px;\n}\n.lsb-gh-topic{\n	padding:1px 7px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge{\n	display:inline-block;\n	padding:1px 6px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge-open{background:var(--success-soft);color:var(--success)}\n.lsb-gh-badge-closed{background:var(--danger-soft);color:var(--danger)}\n.lsb-gh-badge-merged{background:var(--info-soft);color:var(--info)}\n.lsb-gh-badge-draft{background:var(--bg-soft);color:var(--text-muted)}\n.lsb-gh-add{color:var(--success)}\n.lsb-gh-del{color:var(--danger)}\n.lsb-gh-code-wrap{\n	margin-top:8px;\n	border:1px solid var(--line);\n	border-radius:8px;\n	overflow:auto;\n	max-height:420px;\n	background:var(--bg-soft);\n	counter-reset:lsb-ln calc(var(--lsb-ln-start, 1) - 1);\n}\n.lsb-gh-code{\n	margin:0;\n	padding:8px 0;\n	font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;\n	white-space:pre;\n	tab-size:4;\n}\n.lsb-gh-code-wrap .shiki{\n	background:transparent!important;\n}\n.lsb-gh-line,\n.lsb-gh-code-wrap .line{\n	display:block;\n	padding:0 12px 0 0;\n}\n.lsb-gh-line:hover,\n.lsb-gh-code-wrap .line:hover{background:color-mix(in srgb, var(--text) 6%, transparent)}\n.lsb-gh-ln,\n.lsb-gh-code-wrap .line::before{\n	display:inline-block;\n	width:3.2em;\n	margin-right:10px;\n	padding-left:10px;\n	text-align:right;\n	color:var(--text-disabled);\n	user-select:none;\n	vertical-align:top;\n}\n.lsb-gh-code-wrap .line::before{\n	counter-increment:lsb-ln;\n	content:counter(lsb-ln);\n}\n.lsb-gh-more{\n	margin-top:6px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n";
+	var github_default = ".lsb-gh{\n	display:block;\n	margin:.55em 0;\n	max-width:min(100%,720px);\n}\n.lsb-gh-card{\n	margin-top:.45em;\n	padding:10px 12px;\n	border:1px solid var(--line);\n	border-radius:10px;\n	background:var(--card-bg);\n	color:var(--text);\n	font:13px/1.45 system-ui,sans-serif;\n}\n.lsb-gh-card.lsb-gh-loading{opacity:.7}\n.lsb-gh-head{\n	display:flex;\n	flex-wrap:wrap;\n	gap:6px 10px;\n	align-items:baseline;\n}\n.lsb-gh-name{font-weight:700;word-break:break-word}\n.lsb-gh-meta{\n	margin-top:4px;\n	color:var(--text-muted);\n	font-size:12px;\n}\n.lsb-gh-desc{\n	margin-top:6px;\n	color:var(--text-subtle);\n	white-space:pre-wrap;\n	word-break:break-word;\n}\n.lsb-gh-stats{\n	display:flex;\n	flex-wrap:wrap;\n	gap:8px 12px;\n	margin-top:8px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n.lsb-gh-topics{\n	display:flex;\n	flex-wrap:wrap;\n	gap:4px;\n	margin-top:8px;\n}\n.lsb-gh-topic{\n	padding:1px 7px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge{\n	display:inline-block;\n	padding:1px 6px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge-open{background:var(--success-soft);color:var(--success)}\n.lsb-gh-badge-closed{background:var(--danger-soft);color:var(--danger)}\n.lsb-gh-badge-merged{background:var(--info-soft);color:var(--info)}\n.lsb-gh-badge-draft{background:var(--bg-soft);color:var(--text-muted)}\n.lsb-gh-add{color:var(--success)}\n.lsb-gh-del{color:var(--danger)}\n.lsb-gh-card>.lsb-gh-code{\n	margin-top:8px;\n	max-height:420px;\n}\n.lsb-gh-more{\n	margin-top:6px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n";
 
 	// src/github/github.mjs
 	/**
@@ -636,41 +689,6 @@
 		return elem("span", className, label);
 	}
 	/**
-	 * 将纯文本行写入代码容器（Shiki 不可用时回退）。
-	 * @param {HTMLElement} wrap 代码容器
-	 * @param {string[]} lines 行内容
-	 * @param {number} start 起始行号
-	 * @returns {void}
-	 */
-	function fillPlainCode(wrap, lines, start) {
-		const pre = elem("pre", "lsb-gh-code");
-		for (let index = 0; index < lines.length; index++) {
-			const row = elem("span", "lsb-gh-line");
-			row.append(elem("span", "lsb-gh-ln", String(start + index)), document.createTextNode(lines[index] || " "));
-			pre.append(row);
-		}
-		wrap.replaceChildren(pre);
-	}
-	/**
-	 * 高亮后填入代码容器；失败则纯文本。行号用 CSS counter（`--lsb-ln-start`）。
-	 * @param {HTMLElement} wrap 代码容器
-	 * @param {{lines: string[], start: number, path: string}} data 文件片段
-	 * @returns {Promise<void>}
-	 */
-	async function fillHighlightedCode(wrap, data) {
-		wrap.style.setProperty("--lsb-ln-start", String(data.start));
-		try {
-			const html = await highlightCode(data.lines.join("\n"), langFromPath(data.path));
-			const template = document.createElement("template");
-			template.innerHTML = html;
-			const pre = template.content.querySelector("pre");
-			pre.classList.add("lsb-gh-code");
-			wrap.replaceChildren(pre);
-		} catch {
-			fillPlainCode(wrap, data.lines, data.start);
-		}
-	}
-	/**
 	 * 将 GitHub 卡片数据渲染到容器。
 	 * @param {HTMLElement} card 卡片容器
 	 * @param {object | null} data 卡片数据
@@ -757,13 +775,13 @@
 				card.append(elem("div", "lsb-gh-more", "\u4E8C\u8FDB\u5236\u6587\u4EF6\uFF0C\u65E0\u6CD5\u9884\u89C8"));
 				return;
 			}
-			const wrap = elem("div", "lsb-gh-code-wrap");
-			card.append(wrap);
+			const pre = await renderShikiPre(data.lines.join("\n"), langFromPath(data.path), { lineStart: data.start });
+			pre.classList.add("lsb-gh-code");
+			card.append(pre);
 			if (data.truncated) {
 				const note = data.ranged ? `\u5DF2\u622A\u65AD\uFF0C\u5171 ${data.total} \u884C` : `\u9884\u89C8\u524D ${data.end} \u884C\uFF0C\u5171 ${data.total} \u884C`;
 				card.append(elem("div", "lsb-gh-more", note));
 			}
-			await fillHighlightedCode(wrap, data);
 		}
 	}
 	/**
@@ -1092,11 +1110,6 @@ ${url}`;
 	color:var(--danger, #b91c1c);
 	white-space:pre-wrap;
 }
-.lsb-md pre.shiki,.lsb-md .shiki{
-	overflow:auto;
-	padding:.75em 1em;
-	border-radius:8px;
-}
 .lsb-md svg[id^="lsb-mmd-"],.lsb-md svg[id^="mermaid-"]{
 	display:block;
 	max-width:100%;
@@ -1364,15 +1377,8 @@ g.classGroup .title { font-weight: bolder !important; }
 				if (lang === "mermaid") return;
 				targets.push({ index, parent, lang, text: toString(code).replace(/\n$/, "") });
 			});
-			const codeToHtml = await loadCodeToHtml();
-			const theme = siteIsDark() ? "github-dark" : "github-light";
 			for (const t of [...targets].sort((a, b) => b.index - a.index)) {
-				let html;
-				try {
-					html = await codeToHtml(t.text, { lang: t.lang, theme });
-				} catch {
-					html = await codeToHtml(t.text, { lang: "text", theme });
-				}
+				const html = await highlightCode(t.text, t.lang);
 				const nodes = fromHtml(html, { fragment: true }).children;
 				t.parent.children.splice(t.index, 1, ...nodes);
 			}
@@ -1890,7 +1896,7 @@ g.classGroup .title { font-weight: bolder !important; }
 	}
 
 	// src/theme/theme.css
-	var theme_default = "/* \u7AD9\u70B9\u4E3B\u9898\u672A\u58F0\u660E\u3001\u5374\u5E26\u6D45\u8272 fallback \u7684\u53D8\u91CF\uFF0C\u8DDF --panel / --line-soft \u8D70 */\n:root{\n	--card-bg:var(--panel);\n	--bg-soft:var(--line-soft);\n}\n\n/* \u6EA2\u51FA\u5BB9\u5668\uFF1A\u7CFB\u7EDF\u9ED8\u8BA4\u6ED1\u5757\u5E38\u8DDF OS \u4E0D\u8DDF\u7AD9\u70B9\uFF0C\u7ED1\u4E3B\u9898\u53D8\u91CF */\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display){\n	scrollbar-width:thin;\n	scrollbar-color:var(--text-muted) var(--bg-soft);\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar{\n	width:8px;\n	height:8px;\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-track,\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-corner{\n	background:var(--bg-soft);\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb{\n	background:var(--line);\n	border-radius:4px;\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb:hover{\n	background:var(--text-muted);\n}\n";
+	var theme_default = "/* \u7AD9\u70B9\u4E3B\u9898\u672A\u58F0\u660E\u3001\u5374\u5E26\u6D45\u8272 fallback \u7684\u53D8\u91CF\uFF0C\u8DDF --panel / --line-soft \u8D70 */\n:root{\n	--card-bg:var(--panel);\n	--bg-soft:var(--line-soft);\n}\n\n/* \u6EA2\u51FA\u5BB9\u5668\uFF1A\u7CFB\u7EDF\u9ED8\u8BA4\u6ED1\u5757\u5E38\u8DDF OS \u4E0D\u8DDF\u7AD9\u70B9\uFF0C\u7ED1\u4E3B\u9898\u53D8\u91CF */\n:is(pre.shiki,.lsb-md pre,.lsb-md table,.lsb-md .katex-display){\n	scrollbar-width:thin;\n	scrollbar-color:var(--text-muted) var(--bg-soft);\n}\n:is(pre.shiki,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar{\n	width:8px;\n	height:8px;\n}\n:is(pre.shiki,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-track,\n:is(pre.shiki,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-corner{\n	background:var(--bg-soft);\n}\n:is(pre.shiki,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb{\n	background:var(--line);\n	border-radius:4px;\n}\n:is(pre.shiki,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb:hover{\n	background:var(--text-muted);\n}\n";
 
 	// src/theme/theme.mjs
 	/**
@@ -1932,7 +1938,7 @@ g.classGroup .title { font-weight: bolder !important; }
 			}).observe(document.documentElement, { childList: true, subtree: true });
 		};
 		const style = document.createElement("style");
-		style.textContent = [theme_default, markdown_default, linkify_default, tip_default, github_default, orders_default].join("\n");
+		style.textContent = [theme_default, shiki_default, markdown_default, linkify_default, tip_default, github_default, orders_default].join("\n");
 		document.documentElement.appendChild(style);
 		/**
 		 * DOM 就绪后挂交互与帖文处理。

@@ -64,46 +64,9 @@
 .lsb-gh-badge-draft{background:var(--bg-soft);color:var(--text-muted)}
 .lsb-gh-add{color:var(--success)}
 .lsb-gh-del{color:var(--danger)}
-.lsb-gh-code-wrap{
+.lsb-gh-card>.lsb-gh-code{
 	margin-top:8px;
-	border:1px solid var(--line);
-	border-radius:8px;
-	overflow:auto;
 	max-height:420px;
-	background:var(--bg-soft);
-	counter-reset:lsb-ln calc(var(--lsb-ln-start, 1) - 1);
-}
-.lsb-gh-code{
-	margin:0;
-	padding:8px 0;
-	font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-	white-space:pre;
-	tab-size:4;
-}
-.lsb-gh-code-wrap .shiki{
-	background:transparent!important;
-}
-.lsb-gh-line,
-.lsb-gh-code-wrap .line{
-	display:block;
-	padding:0 12px 0 0;
-}
-.lsb-gh-line:hover,
-.lsb-gh-code-wrap .line:hover{background:color-mix(in srgb, var(--text) 6%, transparent)}
-.lsb-gh-ln,
-.lsb-gh-code-wrap .line::before{
-	display:inline-block;
-	width:3.2em;
-	margin-right:10px;
-	padding-left:10px;
-	text-align:right;
-	color:var(--text-disabled);
-	user-select:none;
-	vertical-align:top;
-}
-.lsb-gh-code-wrap .line::before{
-	counter-increment:lsb-ln;
-	content:counter(lsb-ln);
 }
 .lsb-gh-more{
 	margin-top:6px;

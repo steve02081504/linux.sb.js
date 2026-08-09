@@ -7,7 +7,7 @@ import {
 	IMG_EXT_RE,
 } from '../constants.mjs'
 import { ghApi, ghRaw } from '../net.mjs'
-import { highlightCode, langFromPath } from '../shiki/shiki.mjs'
+import { langFromPath, renderShikiPre } from '../shiki/shiki.mjs'
 import { elem, fmtCount, snippetText } from '../util.mjs'
 
 import css from './github.css'
@@ -279,43 +279,6 @@ function stateBadge(state) {
 }
 
 /**
- * 将纯文本行写入代码容器（Shiki 不可用时回退）。
- * @param {HTMLElement} wrap 代码容器
- * @param {string[]} lines 行内容
- * @param {number} start 起始行号
- * @returns {void}
- */
-function fillPlainCode(wrap, lines, start) {
-	const pre = elem('pre', 'lsb-gh-code')
-	for (let index = 0; index < lines.length; index++) {
-		const row = elem('span', 'lsb-gh-line')
-		row.append(elem('span', 'lsb-gh-ln', String(start + index)), document.createTextNode(lines[index] || ' '))
-		pre.append(row)
-	}
-	wrap.replaceChildren(pre)
-}
-
-/**
- * 高亮后填入代码容器；失败则纯文本。行号用 CSS counter（`--lsb-ln-start`）。
- * @param {HTMLElement} wrap 代码容器
- * @param {{lines: string[], start: number, path: string}} data 文件片段
- * @returns {Promise<void>}
- */
-async function fillHighlightedCode(wrap, data) {
-	wrap.style.setProperty('--lsb-ln-start', String(data.start))
-	try {
-		const html = await highlightCode(data.lines.join('\n'), langFromPath(data.path))
-		const template = document.createElement('template')
-		template.innerHTML = html
-		const pre = template.content.querySelector('pre')
-		pre.classList.add('lsb-gh-code')
-		wrap.replaceChildren(pre)
-	} catch {
-		fillPlainCode(wrap, data.lines, data.start)
-	}
-}
-
-/**
  * 将 GitHub 卡片数据渲染到容器。
  * @param {HTMLElement} card 卡片容器
  * @param {object | null} data 卡片数据
@@ -408,15 +371,15 @@ async function renderGithubCard(card, data) {
 			return
 		}
 
-		const wrap = elem('div', 'lsb-gh-code-wrap')
-		card.append(wrap)
+		const pre = await renderShikiPre(data.lines.join('\n'), langFromPath(data.path), { lineStart: data.start })
+		pre.classList.add('lsb-gh-code')
+		card.append(pre)
 		if (data.truncated) {
 			const note = data.ranged
 				? `已截断，共 ${data.total} 行`
 				: `预览前 ${data.end} 行，共 ${data.total} 行`
 			card.append(elem('div', 'lsb-gh-more', note))
 		}
-		await fillHighlightedCode(wrap, data)
 	}
 }
 

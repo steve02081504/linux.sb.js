@@ -109,11 +109,6 @@
 	color:var(--danger, #b91c1c);
 	white-space:pre-wrap;
 }
-.lsb-md pre.shiki,.lsb-md .shiki{
-	overflow:auto;
-	padding:.75em 1em;
-	border-radius:8px;
-}
 .lsb-md svg[id^="lsb-mmd-"],.lsb-md svg[id^="mermaid-"]{
 	display:block;
 	max-width:100%;

@@ -1,3 +1,10 @@
+import css from './shiki.css'
+
+/**
+ *
+ */
+export { css }
+
 const SHIKI_URL = 'https://esm.sh/shiki@3'
 
 /** @type {Promise<Function> | null} */
@@ -62,4 +69,54 @@ export function langFromPath(path) {
 	if (base === 'makefile' || base === 'gnumakefile') return 'makefile'
 	const dot = base.lastIndexOf('.')
 	return dot < 0 ? 'text' : base.slice(dot + 1) || 'text'
+}
+
+/**
+ * 高亮失败时的纯文本 `<pre class="shiki">`（可选行号结构与高亮一致）。
+ * @param {string} text 源码
+ * @param {number} [lineStart] 起始行号；有则加 `.lsb-ln`
+ * @returns {HTMLPreElement}
+ */
+function plainPre(text, lineStart) {
+	const pre = document.createElement('pre')
+	pre.className = lineStart != null ? 'shiki lsb-ln' : 'shiki'
+	if (lineStart != null) {
+		pre.style.setProperty('--lsb-ln-start', String(lineStart))
+		const code = document.createElement('code')
+		const lines = text.split('\n')
+		for (let index = 0; index < lines.length; index++) {
+			if (index) code.append(document.createTextNode('\n'))
+			const line = document.createElement('span')
+			line.className = 'line'
+			line.textContent = lines[index] || ' '
+			code.append(line)
+		}
+		pre.append(code)
+	} else
+		pre.textContent = text
+
+	return pre
+}
+
+/**
+ * 渲染与 Markdown 代码块同结构的 Shiki `<pre>`。
+ * @param {string} text 源码
+ * @param {string} [lang='text'] 语言
+ * @param {{lineStart?: number}} [options] `lineStart` 有则显示行号
+ * @returns {Promise<HTMLPreElement>}
+ */
+export async function renderShikiPre(text, lang = 'text', options = {}) {
+	const { lineStart } = options
+	try {
+		const template = document.createElement('template')
+		template.innerHTML = await highlightCode(text, lang)
+		const pre = template.content.querySelector('pre')
+		if (lineStart != null) {
+			pre.classList.add('lsb-ln')
+			pre.style.setProperty('--lsb-ln-start', String(lineStart))
+		}
+		return pre
+	} catch {
+		return plainPre(text, lineStart)
+	}
 }
