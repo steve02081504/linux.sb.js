@@ -140,6 +140,7 @@ build.mjs               # esbuild → tab 缩进的 linux.sb.user.js
 - GitHub API 无 UA 会 403；限流时卡片显示加载失败即可
 - CDN 挂了则该帖保持纯文本并继续 linkify；普通帖只拉基础 unified，勿默认预拉 mermaid/shiki/katex
 - `mermaid.render(id, text, host)`（mermaid@11）：第三参传 DOM 宿主会 `getAttribute of null`；只传 id+text，让库自建临时节点；勿再搞零尺寸离屏 host
+- Mermaid 深色：`theme: 'base'` + `themeCSS` 绑站点变量（`--panel` / `--text` / `--brand`…）；SVG 内 `var()` 随 `html.lsb-dark` 切换，不必主题切换时重渲；`secure` 锁住 theme/themeCSS/securityLevel 防图源 frontmatter 覆盖
 - 「夜间保护模式」是发帖时段限制，不是视觉深色；深色靠脚本 `lsb-dark` / `lsb-theme`
 - 不要撤销你不知道来源的未提交改动（可能是其他 agent 在改）
 - IIFE 打包后顶层绑定共享作用域：导出/顶层名勿与常见形参撞车（曾用 `el` 工厂导致形参被改成 `el2`，JSDoc `@param el` 对不上）

@@ -107,6 +107,100 @@ function rehypeSanitize(BLOCKED_HTML_TAGS, URL_HTML_ATTRIBUTES, isSafeHtmlUrl, v
 	}
 }
 
+/** Mermaid 主题 CSS：用站点变量，随 `html.lsb-dark` 切换，无需重渲。 */
+const MERMAID_THEME_CSS = /* css */ `
+.node rect, .node circle, .node polygon, .node ellipse, .node path,
+.cluster rect, .cluster polygon,
+.section0 rect, .section1 rect, .section2 rect, .section3 rect,
+.actor rect, .actor line,
+.title rect, .title polygon,
+g.classGroup rect, g.stateGroup rect, .statediagram-cluster rect {
+	fill: var(--panel) !important;
+	stroke: var(--text) !important;
+	stroke-opacity: 0.35 !important;
+}
+
+.title rect, .title polygon,
+g.stateGroup .composit, .statediagram-cluster .inner {
+	fill: var(--bg) !important;
+}
+.statediagram-cluster.statediagram-cluster-alt .inner { fill: var(--bg-soft, #f7f7f7) !important; }
+
+.nodeLabel, .node .label, .edgeLabel, .cluster-label, .label span,
+.title .label, .title text, g.stateGroup text, .stateLabel text,
+.statediagramTitleText, .classTitleText {
+	fill: var(--text) !important;
+	color: var(--text) !important;
+}
+
+.edgePath path, .edgePath line, .marker path, .arrowheadPath,
+.relation, .transition, g.stateGroup line, .statediagram-cluster .divider,
+[id$="-compositionStart"], [id$="-compositionEnd"],
+[id$="-dependencyStart"], [id$="-dependencyEnd"],
+[id$="-extensionStart"], [id$="-extensionEnd"],
+[id$="-aggregationStart"], [id$="-aggregationEnd"],
+[id$="-lollipopStart"], [id$="-lollipopEnd"],
+defs [id$="-barbEnd"] {
+	stroke: var(--text) !important;
+	fill: var(--text) !important;
+}
+[id$="-extensionStart"], [id$="-extensionEnd"], [id$="-aggregationStart"], [id$="-aggregationEnd"] { fill: transparent !important; }
+[id$="-lollipopStart"], [id$="-lollipopEnd"] { fill: var(--panel) !important; }
+
+.edgeLabel .label rect, .stateLabel .box, .classLabel .box {
+	fill: var(--panel) !important;
+	opacity: 0.5 !important;
+	stroke: none !important;
+}
+.divider, g.classGroup line { stroke: var(--text) !important; stroke-opacity: 0.35 !important; }
+.statediagram-state rect.divider { stroke-dasharray: 10,10 !important; fill: var(--bg-soft, #f7f7f7) !important; }
+
+.note rect, .note polygon, .state-note, .statediagram-note rect {
+	fill: var(--warning, #fff5ad) !important;
+	stroke: var(--warning, #fff5ad) !important;
+}
+.note .label, .note text, .state-note text, .statediagram-note text, .statediagram-note .nodeLabel {
+	fill: #1c1917 !important;
+	color: #1c1917 !important;
+}
+
+.activation0, .activation1, .activation2,
+g.stateGroup .alt-composit, .statediagram-state rect.divider {
+	fill: var(--bg-soft, #f7f7f7) !important;
+}
+
+.node circle.state-start, .node .fork-join {
+	fill: var(--brand) !important;
+	stroke: var(--brand) !important;
+}
+.node circle.state-end, .end-state-inner {
+	fill: var(--text) !important;
+	stroke: var(--bg) !important;
+	stroke-width: 1.5 !important;
+}
+.actor-man line { stroke: var(--text) !important; }
+
+.text-muted {
+	fill: var(--text) !important;
+	color: var(--text) !important;
+	opacity: 0.7;
+}
+.statediagram-state rect.basic { rx: 5px !important; ry: 5px !important; }
+.statediagram-cluster rect.outer { rx: 5px !important; ry: 5px !important; }
+g.classGroup .title { font-weight: bolder !important; }
+.classTitle { font-weight: bolder !important; }
+`
+
+/** 图源 frontmatter / init 不可覆盖的 mermaid 配置键。 */
+const MERMAID_SECURE_KEYS = [
+	'secure',
+	'securityLevel',
+	'startOnLoad',
+	'maxTextSize',
+	'theme',
+	'themeCSS',
+]
+
 /**
  * 创建 rehype 插件，将 mermaid 代码块渲染为 SVG。
  * @param {object} mermaid mermaid 实例
@@ -119,8 +213,10 @@ function rehypeMermaid(mermaid, visit, fromHtml, toString) {
 	mermaid.initialize({
 		startOnLoad: false,
 		securityLevel: 'strict',
-		theme: 'neutral',
+		theme: 'base',
 		suppressErrorRendering: true,
+		themeCSS: MERMAID_THEME_CSS,
+		secure: MERMAID_SECURE_KEYS,
 	})
 	return () => async tree => {
 		const targets = []
