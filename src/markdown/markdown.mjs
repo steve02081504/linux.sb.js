@@ -107,7 +107,7 @@ function rehypeSanitize(BLOCKED_HTML_TAGS, URL_HTML_ATTRIBUTES, isSafeHtmlUrl, v
 	}
 }
 
-/** Mermaid 主题 CSS：用站点变量，随 `html.lsb-dark` 切换，无需重渲。 */
+/** Mermaid 主题 CSS：绑站点 `:root` 变量，随站点主题切换，无需重渲。 */
 const MERMAID_THEME_CSS = /* css */ `
 .node rect, .node circle, .node polygon, .node ellipse, .node path,
 .cluster rect, .cluster polygon,
@@ -251,6 +251,20 @@ function rehypeMermaid(mermaid, visit, fromHtml, toString) {
 }
 
 /**
+ * 按站点 `--bg` 亮度选 Shiki 主题。
+ * @returns {boolean} 背景是否偏暗
+ */
+function siteIsDark() {
+	const raw = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
+	const match = raw.match(/^#([\da-f]{3}|[\da-f]{6})$/i)
+	if (!match) return false
+	let hex = match[1]
+	if (hex.length === 3) hex = [...hex].map(c => c + c).join('')
+	const channel = index => parseInt(hex.slice(index, index + 2), 16) / 255
+	return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4) < 0.45
+}
+
+/**
  * 创建 rehype 插件，用 Shiki 高亮代码块。
  * @param {Function} codeToHtml Shiki codeToHtml
  * @param {Function} visit unist-util-visit
@@ -269,12 +283,13 @@ function rehypeShiki(codeToHtml, visit, fromHtml, toString) {
 			if (lang === 'mermaid') return
 			targets.push({ index, parent, lang, text: toString(code).replace(/\n$/, '') })
 		})
+		const theme = siteIsDark() ? 'github-dark' : 'github-light'
 		for (const t of [...targets].sort((a, b) => b.index - a.index)) {
 			let html
 			try {
-				html = await codeToHtml(t.text, { lang: t.lang, theme: 'github-dark' })
+				html = await codeToHtml(t.text, { lang: t.lang, theme })
 			} catch {
-				html = await codeToHtml(t.text, { lang: 'text', theme: 'github-dark' })
+				html = await codeToHtml(t.text, { lang: 'text', theme })
 			}
 			const nodes = fromHtml(html, { fragment: true }).children
 			t.parent.children.splice(t.index, 1, ...nodes)

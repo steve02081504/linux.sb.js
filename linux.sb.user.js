@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         linux.sb helpers
 // @namespace    https://linux.sb/
-// @version      0.0.5
-// @description  Markdown（unified；按需 katex/mermaid/shiki；禁 script / javascript:）；深色模式（默认开）；Ctrl+Enter；外链增强；GitHub 内联；站内悬浮；图片内联
+// @version      0.0.6
+// @description  Markdown（unified；按需 katex/mermaid/shiki；禁 script / javascript:）；跟随站点主题；Ctrl+Enter；主页自动签到；外链增强；GitHub 内联；站内悬浮；图片内联；购买记录≥2条默认折叠
 // @author       steve02081504
 // @homepageURL  https://github.com/steve02081504/linux.sb.js
 // @downloadURL  https://raw.githubusercontent.com/steve02081504/linux.sb.js/master/linux.sb.user.js
@@ -10,11 +10,27 @@
 // @match        https://linux.sb/*
 // @run-at       document-start
 // @grant        GM_xmlhttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @connect      *
 // @connect      esm.sh
 // @connect      cdn.jsdelivr.net
 // ==/UserScript==
 (() => {
+	// src/checkin/checkin.mjs
+	var clicked = false;
+	/**
+	 * 主页侧栏「每日签到」未完成时点一次签到按钮。
+	 * @returns {void}
+	 */
+	function autoCheckin() {
+		if (clicked) return;
+		const button = document.querySelector(".daily-checkin-card .daily-checkin-action button");
+		if (!button) return;
+		clicked = true;
+		button.click();
+	}
+
 	// src/constants.mjs
 	/** 外链 URL 正则 */
 	var URL_RE = /https?:\/\/[^\s<>"'`]+/gi;
@@ -1097,7 +1113,7 @@ ${url}`;
 			});
 		};
 	}
-	/** Mermaid 主题 CSS：用站点变量，随 `html.lsb-dark` 切换，无需重渲。 */
+	/** Mermaid 主题 CSS：绑站点 `:root` 变量，随站点主题切换，无需重渲。 */
 	var MERMAID_THEME_CSS = (
 		/* css */
 		`
@@ -1241,6 +1257,19 @@ g.classGroup .title { font-weight: bolder !important; }
 		};
 	}
 	/**
+	 * 按站点 `--bg` 亮度选 Shiki 主题。
+	 * @returns {boolean} 背景是否偏暗
+	 */
+	function siteIsDark() {
+		const raw = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+		const match = raw.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+		if (!match) return false;
+		let hex = match[1];
+		if (hex.length === 3) hex = [...hex].map((c) => c + c).join("");
+		const channel = (index) => parseInt(hex.slice(index, index + 2), 16) / 255;
+		return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4) < 0.45;
+	}
+	/**
 	 * 创建 rehype 插件，用 Shiki 高亮代码块。
 	 * @param {Function} codeToHtml Shiki codeToHtml
 	 * @param {Function} visit unist-util-visit
@@ -1259,12 +1288,13 @@ g.classGroup .title { font-weight: bolder !important; }
 				if (lang === "mermaid") return;
 				targets.push({ index, parent, lang, text: toString(code).replace(/\n$/, "") });
 			});
+			const theme = siteIsDark() ? "github-dark" : "github-light";
 			for (const t of [...targets].sort((a, b) => b.index - a.index)) {
 				let html;
 				try {
-					html = await codeToHtml(t.text, { lang: t.lang, theme: "github-dark" });
+					html = await codeToHtml(t.text, { lang: t.lang, theme });
 				} catch {
-					html = await codeToHtml(t.text, { lang: "text", theme: "github-dark" });
+					html = await codeToHtml(t.text, { lang: "text", theme });
 				}
 				const nodes = fromHtml(html, { fragment: true }).children;
 				t.parent.children.splice(t.index, 1, ...nodes);
@@ -1380,6 +1410,35 @@ g.classGroup .title { font-weight: bolder !important; }
 		template.innerHTML = String(file);
 		post.replaceChildren(...template.content.childNodes);
 		post.classList.add("lsb-md");
+	}
+
+	// src/orders/orders.css
+	var orders_default = ".lsb-orders > summary {\n	display: inline-flex;\n	align-items: center;\n	width: max-content;\n	max-width: 100%;\n	margin: 0;\n	color: var(--text);\n	font-size: 12px;\n	font-weight: 600;\n	line-height: 1.4;\n	cursor: pointer;\n	list-style: none;\n}\n\n.lsb-orders > summary::-webkit-details-marker {\n	display: none;\n}\n\n.lsb-orders > summary::before {\n	content: '+';\n	display: inline-flex;\n	align-items: center;\n	justify-content: center;\n	width: 16px;\n	height: 16px;\n	margin-right: 6px;\n	border-radius: 50%;\n	background: var(--brand-soft);\n	color: var(--brand);\n	font-weight: 700;\n	line-height: 1;\n}\n\n.lsb-orders[open] > summary {\n	margin-bottom: 7px;\n}\n\n.lsb-orders[open] > summary::before {\n	content: '-';\n}\n";
+
+	// src/orders/orders.mjs
+	/**
+	 *
+	 */
+	/**
+	 * 将 `.virtual-card-orders` 收成 `<details>`；≥2 条时默认折叠，否则展开；URL 带 `vc_page` 时展开。
+	 * @param {ParentNode} [root=document] 处理起点
+	 * @returns {void}
+	 */
+	function collapseOrders(root = document) {
+		const boxes = [...root.querySelectorAll?.(".virtual-card-orders") || []];
+		if (root.nodeType === 1 && root.matches?.(".virtual-card-orders")) boxes.push(root);
+		const forceOpen = new URLSearchParams(location.search).has("vc_page");
+		for (const box of boxes) {
+			if (box.dataset.lsbOrders) continue;
+			const heading = box.querySelector(":scope > h3");
+			if (!heading) continue;
+			box.dataset.lsbOrders = "1";
+			const details = elem("details", "lsb-orders");
+			details.open = forceOpen || box.querySelectorAll(":scope > ul > li").length < 2;
+			details.appendChild(elem("summary", null, heading.textContent));
+			heading.replaceWith(details);
+			while (details.nextSibling) details.appendChild(details.nextSibling);
+		}
 	}
 
 	// src/tip/tip.css
@@ -1736,88 +1795,76 @@ g.classGroup .title { font-weight: bolder !important; }
 		}, true);
 	}
 
+	// src/store.mjs
+	/* global GM_getValue, GM_setValue */
+	/**
+	 * 油猴长期存储（脚本级，跨页、清站点 localStorage 仍在）。
+	 * @param {string} key 键
+	 * @param {*} [fallback] 未写入时的默认值
+	 * @returns {*} 已存值或 fallback
+	 */
+	function getStore(key, fallback) {
+		return GM_getValue(key, fallback);
+	}
+	/**
+	 * @param {string} key 键
+	 * @param {*} value 可序列化值
+	 * @returns {void}
+	 */
+	function setStore(key, value) {
+		GM_setValue(key, value);
+	}
+
 	// src/theme/theme.css
-	var theme_default = "html.lsb-dark{\n	color-scheme:dark;\n	--bg:#121418;\n	--bg-soft:#16191f;\n	--panel:#1a1d24;\n	--card-bg:#1a1d24;\n	--line:#2c313c;\n	--line-soft:#232830;\n	--text:#e6e8ec;\n	--text-muted:#9aa3b2;\n	--text-subtle:#6e7685;\n	--text-disabled:#555c68;\n	--brand:#7b95c9;\n	--brand-hover:#97aed8;\n	--brand-soft:#243044;\n	--success:#5aabff;\n	--success-soft:#1c2b40;\n	--danger:#e06b6b;\n	--danger-soft:#3a1f22;\n	--warning:#e0a05a;\n	--warning-soft:#3a2a16;\n	--info:#6bb0ff;\n	--info-soft:#1a2a40;\n	--inverse:#0c0e12;\n	--inverse-border:#3a4150;\n	--inverse-text:#e6e8ec;\n	--color-dark-rgb:0,0,0;\n	--backdrop:rgba(0,0,0,.55);\n	--shadow-base:rgba(0,0,0,.28);\n	--shadow-medium:rgba(0,0,0,.45);\n	--focus-ring:rgba(123,149,201,.35);\n}\n.lsb-theme-toggle{\n	display:inline-flex;\n	align-items:center;\n	justify-content:center;\n	flex:0 0 auto;\n	min-width:52px;\n	min-height:30px;\n	height:30px;\n	padding:0 10px;\n	border:1px solid var(--line)!important;\n	border-radius:var(--radius-sm);\n	background:var(--panel)!important;\n	color:var(--text-muted)!important;\n	font:inherit;\n	font-size:var(--font-size-sm);\n	font-weight:500;\n	line-height:1;\n	cursor:pointer;\n	user-select:none;\n	white-space:nowrap;\n}\n.lsb-theme-toggle:hover{\n	background:var(--bg)!important;\n	color:var(--text)!important;\n	border-color:var(--text-subtle)!important;\n}\n.bar .search-form{grid-column:5}\n.bar .lsb-theme-toggle{\n	grid-column:6;\n	grid-row:1;\n	justify-self:end;\n}\n@media(max-width:720px){\n	.bar .lsb-theme-toggle{height:26px;min-height:26px;min-width:44px;padding:0 8px}\n}\n";
+	var theme_default = "/* \u7AD9\u70B9\u4E3B\u9898\u672A\u58F0\u660E\u3001\u5374\u5E26\u6D45\u8272 fallback \u7684\u53D8\u91CF\uFF0C\u8DDF --panel / --line-soft \u8D70 */\n:root{\n	--card-bg:var(--panel);\n	--bg-soft:var(--line-soft);\n}\n";
 
 	// src/theme/theme.mjs
 	/**
 	 *
 	 */
-	var KEY = "lsb-theme";
+	var SEEN_KEY = "themeSwitchSeen";
+	var THEME_SWITCH_PATH = "/theme_switch";
 	/**
-	 * @returns {boolean} 当前是否为深色模式
+	 * 未打开过站点主题页则跳转；打开过则记入长期存储。
+	 * document-start 调用，避免先闪旧页。
+	 * @returns {boolean} 是否继续初始化（已跳转则为 false）
 	 */
-	function isDark() {
-		return (localStorage.getItem(KEY) ?? "dark") === "dark";
-	}
-	/**
-	 * @param {boolean} [dark=isDark()] 是否启用深色
-	 * @returns {void}
-	 */
-	function applyTheme(dark = isDark()) {
-		document.documentElement.classList.toggle("lsb-dark", dark);
-	}
-	/**
-	 * @param {HTMLButtonElement} toggleButton 切换按钮
-	 * @returns {void}
-	 */
-	function syncToggle(toggleButton) {
-		const dark = document.documentElement.classList.contains("lsb-dark");
-		toggleButton.textContent = dark ? "\u6D45\u8272" : "\u6DF1\u8272";
-		toggleButton.title = dark ? "\u5207\u6362\u6D45\u8272\u6A21\u5F0F" : "\u5207\u6362\u6DF1\u8272\u6A21\u5F0F";
-		toggleButton.setAttribute("aria-pressed", String(dark));
-	}
-	/**
-	 * @returns {void}
-	 */
-	function toggleTheme() {
-		const next = !document.documentElement.classList.contains("lsb-dark");
-		localStorage.setItem(KEY, next ? "dark" : "light");
-		applyTheme(next);
-		const toggleButton = document.querySelector(".lsb-theme-toggle");
-		if (toggleButton) syncToggle(toggleButton);
-	}
-	/**
-	 * 应用主题并在顶栏安装切换按钮。
-	 * document-start 时已调用过 applyTheme；此处再同步一次并装按钮。
-	 * @returns {void}
-	 */
-	function installTheme() {
-		applyTheme();
-		if (document.querySelector(".lsb-theme-toggle")) return;
-		const bar = document.querySelector(".bar");
-		if (!bar) return;
-		const toggleButton = elem("button", "lsb-theme-toggle");
-		toggleButton.type = "button";
-		toggleButton.addEventListener("click", toggleTheme);
-		syncToggle(toggleButton);
-		const search = bar.querySelector(".search-form");
-		if (search) search.after(toggleButton);
-		else bar.appendChild(toggleButton);
+	function syncThemeSwitch() {
+		if (location.pathname === THEME_SWITCH_PATH) {
+			setStore(SEEN_KEY, true);
+			return true;
+		}
+		if (getStore(SEEN_KEY, false)) return true;
+		location.replace(THEME_SWITCH_PATH);
+		return false;
 	}
 
 	// src/main.mjs
-	applyTheme();
-	var style = document.createElement("style");
-	style.textContent = [theme_default, markdown_default, linkify_default, tip_default, github_default].join("\n");
-	document.documentElement.appendChild(style);
-	/**
-	 * DOM 就绪后挂交互与帖文处理。
-	 * @returns {void}
-	 */
-	function boot() {
-		installTheme();
-		initTip();
-		installSubmit();
-		processAll();
-		new MutationObserver((mutations) => {
-			for (const mutation of mutations)
-				for (const node of mutation.addedNodes) {
-					if (node.nodeType !== 1) continue;
-					processAll(node);
-				}
-		}).observe(document.documentElement, { childList: true, subtree: true });
+	if (syncThemeSwitch()) {
+		let boot = function() {
+			initTip();
+			installSubmit();
+			processAll();
+			collapseOrders();
+			autoCheckin();
+			new MutationObserver((mutations) => {
+				for (const mutation of mutations)
+					for (const node of mutation.addedNodes) {
+						if (node.nodeType !== 1) continue;
+						processAll(node);
+						collapseOrders(node);
+						autoCheckin();
+					}
+			}).observe(document.documentElement, { childList: true, subtree: true });
+		};
+		const style = document.createElement("style");
+		style.textContent = [theme_default, markdown_default, linkify_default, tip_default, github_default, orders_default].join("\n");
+		document.documentElement.appendChild(style);
+		/**
+		 * DOM 就绪后挂交互与帖文处理。
+		 * @returns {void}
+		 */
+		if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+		else boot();
 	}
-	if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-	else boot();
 })();

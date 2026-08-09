@@ -1,0 +1,40 @@
+.lsb-orders > summary {
+	display: inline-flex;
+	align-items: center;
+	width: max-content;
+	max-width: 100%;
+	margin: 0;
+	color: var(--text);
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.4;
+	cursor: pointer;
+	list-style: none;
+}
+
+.lsb-orders > summary::-webkit-details-marker {
+	display: none;
+}
+
+.lsb-orders > summary::before {
+	content: '+';
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	border-radius: 50%;
+	background: var(--brand-soft);
+	color: var(--brand);
+	font-weight: 700;
+	line-height: 1;
+}
+
+.lsb-orders[open] > summary {
+	margin-bottom: 7px;
+}
+
+.lsb-orders[open] > summary::before {
+	content: '-';
+}
