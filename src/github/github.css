@@ -6,10 +6,10 @@
 .lsb-gh-card{
 	margin-top:.45em;
 	padding:10px 12px;
-	border:1px solid color-mix(in srgb, CanvasText 14%, transparent);
+	border:1px solid var(--line);
 	border-radius:10px;
-	background:color-mix(in srgb, CanvasText 3%, Canvas);
-	color:CanvasText;
+	background:var(--card-bg);
+	color:var(--text);
 	font:13px/1.45 system-ui,sans-serif;
 }
 .lsb-gh-card.lsb-gh-loading{opacity:.7}
@@ -22,12 +22,12 @@
 .lsb-gh-name{font-weight:700;word-break:break-word}
 .lsb-gh-meta{
 	margin-top:4px;
-	opacity:.72;
+	color:var(--text-muted);
 	font-size:12px;
 }
 .lsb-gh-desc{
 	margin-top:6px;
-	opacity:.9;
+	color:var(--text-subtle);
 	white-space:pre-wrap;
 	word-break:break-word;
 }
@@ -37,7 +37,7 @@
 	gap:8px 12px;
 	margin-top:8px;
 	font-size:12px;
-	opacity:.82;
+	color:var(--text-muted);
 }
 .lsb-gh-topics{
 	display:flex;
@@ -48,30 +48,29 @@
 .lsb-gh-topic{
 	padding:1px 7px;
 	border-radius:999px;
-	background:color-mix(in srgb, CanvasText 10%, transparent);
+	background:var(--bg-soft);
 	font-size:11px;
 }
 .lsb-gh-badge{
 	display:inline-block;
 	padding:1px 6px;
 	border-radius:999px;
-	background:color-mix(in srgb, CanvasText 8%, transparent);
+	background:var(--bg-soft);
 	font-size:11px;
-	opacity:.9;
 }
-.lsb-gh-badge-open{background:color-mix(in srgb,#238636 22%,transparent);color:#1a7f37}
-.lsb-gh-badge-closed{background:color-mix(in srgb,#cf222e 18%,transparent);color:#cf222e}
-.lsb-gh-badge-merged{background:color-mix(in srgb,#8250df 20%,transparent);color:#8250df}
-.lsb-gh-badge-draft{background:color-mix(in srgb,CanvasText 10%,transparent)}
-.lsb-gh-add{color:#1a7f37}
-.lsb-gh-del{color:#cf222e}
+.lsb-gh-badge-open{background:var(--success-soft);color:var(--success)}
+.lsb-gh-badge-closed{background:var(--danger-soft);color:var(--danger)}
+.lsb-gh-badge-merged{background:var(--info-soft);color:var(--info)}
+.lsb-gh-badge-draft{background:var(--bg-soft);color:var(--text-muted)}
+.lsb-gh-add{color:var(--success)}
+.lsb-gh-del{color:var(--danger)}
 .lsb-gh-code-wrap{
 	margin-top:8px;
-	border:1px solid color-mix(in srgb, CanvasText 12%, transparent);
+	border:1px solid var(--line);
 	border-radius:8px;
 	overflow:auto;
 	max-height:420px;
-	background:color-mix(in srgb, CanvasText 4%, Canvas);
+	background:var(--bg-soft);
 }
 .lsb-gh-code{
 	margin:0;
@@ -84,19 +83,19 @@
 	display:block;
 	padding:0 12px 0 0;
 }
-.lsb-gh-line:hover{background:color-mix(in srgb, CanvasText 6%, transparent)}
+.lsb-gh-line:hover{background:color-mix(in srgb, var(--text) 6%, transparent)}
 .lsb-gh-ln{
 	display:inline-block;
 	width:3.2em;
 	margin-right:10px;
 	padding-left:10px;
 	text-align:right;
-	opacity:.42;
+	color:var(--text-disabled);
 	user-select:none;
 	vertical-align:top;
 }
 .lsb-gh-more{
 	margin-top:6px;
 	font-size:12px;
-	opacity:.65;
+	color:var(--text-muted);
 }
