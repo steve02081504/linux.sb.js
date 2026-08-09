@@ -1,0 +1,14 @@
+{
+	"name": "linux.sb.js",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "node build.mjs"
+	},
+	"devDependencies": {
+		"esbuild": "latest"
+	},
+	"allowScripts": {
+		"esbuild@0.28.1": true
+	}
+}

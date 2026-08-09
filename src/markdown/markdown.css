@@ -1,0 +1,122 @@
+.lsb-md{
+	line-height:1.65;
+	word-break:break-word;
+}
+.lsb-md>:first-child{margin-top:0}
+.lsb-md>:last-child{margin-bottom:0}
+.lsb-md h1,.lsb-md h2,.lsb-md h3,.lsb-md h4,.lsb-md h5,.lsb-md h6{
+	margin:1.1em 0 .45em;
+	font-weight:700;
+	line-height:1.35;
+}
+.lsb-md h1{font-size:1.45em}
+.lsb-md h2{font-size:1.28em}
+.lsb-md h3{font-size:1.14em}
+.lsb-md h4,.lsb-md h5,.lsb-md h6{font-size:1em}
+.lsb-md p,.lsb-md ul,.lsb-md ol,.lsb-md blockquote,.lsb-md pre,.lsb-md table,.lsb-md hr{
+	margin:.7em 0;
+}
+.lsb-md ul,.lsb-md ol{
+	padding-left:1.4em;
+}
+.lsb-md li{margin:.2em 0}
+.lsb-md li>ul,.lsb-md li>ol{margin:.2em 0}
+.lsb-md .task-list-item{
+	list-style:none;
+}
+.lsb-md .task-list-item input[type=checkbox]{
+	appearance:none;
+	width:1.05em;
+	height:1.05em;
+	margin:0 .45em 0 -.2em;
+	vertical-align:-.12em;
+	border:1.5px solid var(--text-muted);
+	border-radius:3px;
+	background-color:color-mix(in srgb, var(--text) 8%, transparent);
+}
+.lsb-md .task-list-item input[type=checkbox]:checked{
+	border-color:var(--brand);
+	background-color:var(--brand);
+	background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+	background-size:.85em;
+	background-position:center;
+	background-repeat:no-repeat;
+}
+.lsb-md blockquote{
+	margin-left:0;
+	padding:.15em .9em;
+	border-left:3px solid color-mix(in srgb, currentColor 28%, transparent);
+	opacity:.92;
+}
+.lsb-md blockquote>:first-child{margin-top:0}
+.lsb-md blockquote>:last-child{margin-bottom:0}
+.lsb-md hr{
+	border:0;
+	border-top:1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+.lsb-md code{
+	font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+	font-size:.9em;
+	padding:.1em .35em;
+	border-radius:4px;
+	background:color-mix(in srgb, currentColor 8%, transparent);
+}
+.lsb-md pre{
+	overflow:auto;
+	padding:.75em 1em;
+	border-radius:8px;
+	background:color-mix(in srgb, currentColor 7%, transparent);
+}
+.lsb-md pre code{
+	padding:0;
+	background:none;
+	font-size:.86em;
+}
+.lsb-md table{
+	display:block;
+	max-width:100%;
+	overflow:auto;
+	border-collapse:collapse;
+}
+.lsb-md th,.lsb-md td{
+	border:1px solid color-mix(in srgb, currentColor 16%, transparent);
+	padding:.35em .65em;
+	text-align:left;
+}
+.lsb-md th{
+	font-weight:600;
+	background:color-mix(in srgb, currentColor 6%, transparent);
+}
+.lsb-md img{
+	display:block;
+	max-width:min(100%,520px);
+	max-height:480px;
+	margin:.5em 0;
+	border-radius:6px;
+}
+.lsb-md a{
+	color:var(--brand-hover);
+	text-decoration:underline;
+	text-underline-offset:2px;
+}
+.lsb-md a:hover{color:var(--brand)}
+.lsb-md .katex-display{
+	overflow-x:auto;
+	overflow-y:hidden;
+	padding:.25em 0;
+}
+.lsb-md .lsb-mermaid-error{
+	color:var(--danger, #b91c1c);
+	white-space:pre-wrap;
+}
+.lsb-md pre.shiki,.lsb-md .shiki{
+	overflow:auto;
+	padding:.75em 1em;
+	border-radius:8px;
+}
+.lsb-md svg[id^="lsb-mmd-"],.lsb-md svg[id^="mermaid-"]{
+	display:block;
+	max-width:100%;
+	height:auto;
+	margin:.7em 0;
+}

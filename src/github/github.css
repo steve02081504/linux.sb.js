@@ -1,0 +1,102 @@
+.lsb-gh{
+	display:block;
+	margin:.55em 0;
+	max-width:min(100%,720px);
+}
+.lsb-gh-card{
+	margin-top:.45em;
+	padding:10px 12px;
+	border:1px solid color-mix(in srgb, CanvasText 14%, transparent);
+	border-radius:10px;
+	background:color-mix(in srgb, CanvasText 3%, Canvas);
+	color:CanvasText;
+	font:13px/1.45 system-ui,sans-serif;
+}
+.lsb-gh-card.lsb-gh-loading{opacity:.7}
+.lsb-gh-head{
+	display:flex;
+	flex-wrap:wrap;
+	gap:6px 10px;
+	align-items:baseline;
+}
+.lsb-gh-name{font-weight:700;word-break:break-word}
+.lsb-gh-meta{
+	margin-top:4px;
+	opacity:.72;
+	font-size:12px;
+}
+.lsb-gh-desc{
+	margin-top:6px;
+	opacity:.9;
+	white-space:pre-wrap;
+	word-break:break-word;
+}
+.lsb-gh-stats{
+	display:flex;
+	flex-wrap:wrap;
+	gap:8px 12px;
+	margin-top:8px;
+	font-size:12px;
+	opacity:.82;
+}
+.lsb-gh-topics{
+	display:flex;
+	flex-wrap:wrap;
+	gap:4px;
+	margin-top:8px;
+}
+.lsb-gh-topic{
+	padding:1px 7px;
+	border-radius:999px;
+	background:color-mix(in srgb, CanvasText 10%, transparent);
+	font-size:11px;
+}
+.lsb-gh-badge{
+	display:inline-block;
+	padding:1px 6px;
+	border-radius:999px;
+	background:color-mix(in srgb, CanvasText 8%, transparent);
+	font-size:11px;
+	opacity:.9;
+}
+.lsb-gh-badge-open{background:color-mix(in srgb,#238636 22%,transparent);color:#1a7f37}
+.lsb-gh-badge-closed{background:color-mix(in srgb,#cf222e 18%,transparent);color:#cf222e}
+.lsb-gh-badge-merged{background:color-mix(in srgb,#8250df 20%,transparent);color:#8250df}
+.lsb-gh-badge-draft{background:color-mix(in srgb,CanvasText 10%,transparent)}
+.lsb-gh-add{color:#1a7f37}
+.lsb-gh-del{color:#cf222e}
+.lsb-gh-code-wrap{
+	margin-top:8px;
+	border:1px solid color-mix(in srgb, CanvasText 12%, transparent);
+	border-radius:8px;
+	overflow:auto;
+	max-height:420px;
+	background:color-mix(in srgb, CanvasText 4%, Canvas);
+}
+.lsb-gh-code{
+	margin:0;
+	padding:8px 0;
+	font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+	white-space:pre;
+	tab-size:4;
+}
+.lsb-gh-line{
+	display:block;
+	padding:0 12px 0 0;
+}
+.lsb-gh-line:hover{background:color-mix(in srgb, CanvasText 6%, transparent)}
+.lsb-gh-ln{
+	display:inline-block;
+	width:3.2em;
+	margin-right:10px;
+	padding-left:10px;
+	text-align:right;
+	opacity:.42;
+	user-select:none;
+	vertical-align:top;
+}
+.lsb-gh-more{
+	margin-top:6px;
+	font-size:12px;
+	opacity:.65;
+}

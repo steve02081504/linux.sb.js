@@ -1,0 +1,28 @@
+.lsb-url{
+	color:var(--brand-hover);
+	text-decoration:underline;
+	text-underline-offset:2px;
+	word-break:break-all;
+}
+.lsb-url:hover{color:var(--brand)}
+.lsb-link{
+	display:inline-flex;
+	align-items:center;
+	gap:.35em;
+	max-width:100%;
+	vertical-align:baseline;
+}
+.lsb-favicon{
+	width:14px;
+	height:14px;
+	flex:none;
+	border-radius:2px;
+}
+.lsb-title{font-weight:600}
+.lsb-inline-img{
+	display:block;
+	max-width:min(100%,520px);
+	max-height:480px;
+	margin:.5em 0;
+	border-radius:6px;
+}

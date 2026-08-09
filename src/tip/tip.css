@@ -1,0 +1,54 @@
+.lsb-tip{
+	position:fixed;
+	z-index:99999;
+	min-width:220px;
+	max-width:min(360px,calc(100vw - 16px));
+	padding:10px 12px;
+	border:1px solid color-mix(in srgb, CanvasText 14%, transparent);
+	border-radius:10px;
+	background:Canvas;
+	color:CanvasText;
+	box-shadow:0 10px 30px color-mix(in srgb, CanvasText 18%, transparent);
+	font:13px/1.45 system-ui,sans-serif;
+	pointer-events:auto;
+}
+.lsb-tip[hidden]{display:none!important}
+.lsb-tip-loading{opacity:.7}
+.lsb-tip-user,.lsb-tip-row{
+	display:flex;
+	gap:10px;
+	align-items:flex-start;
+}
+.lsb-tip-row{margin-top:8px}
+.lsb-tip-avatar{
+	width:40px;
+	height:40px;
+	border-radius:50%;
+	object-fit:cover;
+	flex:none;
+	background:color-mix(in srgb, CanvasText 8%, transparent);
+}
+.lsb-tip-name{font-weight:700}
+.lsb-tip-sub{
+	margin-top:2px;
+	opacity:.72;
+	font-size:12px;
+}
+.lsb-tip-snippet{
+	margin-top:6px;
+	opacity:.88;
+	display:-webkit-box;
+	-webkit-line-clamp:4;
+	-webkit-box-orient:vertical;
+	overflow:hidden;
+	white-space:pre-wrap;
+	word-break:break-word;
+}
+.lsb-tip-badge{
+	display:inline-block;
+	margin-top:4px;
+	padding:1px 6px;
+	border-radius:999px;
+	background:color-mix(in srgb, CanvasText 8%, transparent);
+	font-size:12px;
+}
