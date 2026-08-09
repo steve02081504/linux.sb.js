@@ -13,7 +13,7 @@ export { css }
  * @returns {void}
  */
 export function collapseOrders(root = document) {
-	const boxes = [...(root.querySelectorAll?.('.virtual-card-orders') || [])]
+	const boxes = [...root.querySelectorAll?.('.virtual-card-orders') || []]
 	if (root.nodeType === 1 && root.matches?.('.virtual-card-orders')) boxes.push(root)
 
 	const forceOpen = new URLSearchParams(location.search).has('vc_page')

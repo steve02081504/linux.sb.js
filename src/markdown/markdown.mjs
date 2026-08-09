@@ -260,6 +260,10 @@ function siteIsDark() {
 	if (!match) return false
 	let hex = match[1]
 	if (hex.length === 3) hex = [...hex].map(c => c + c).join('')
+	/**
+	 * @param {number} index hex 字符串起始下标
+	 * @returns {number} 0–1 归一化通道值
+	 */
 	const channel = index => parseInt(hex.slice(index, index + 2), 16) / 255
 	return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4) < 0.45
 }
