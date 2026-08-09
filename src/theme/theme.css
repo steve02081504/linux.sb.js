@@ -3,3 +3,24 @@
 	--card-bg:var(--panel);
 	--bg-soft:var(--line-soft);
 }
+
+/* 溢出容器：系统默认滑块常跟 OS 不跟站点，绑主题变量 */
+:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display){
+	scrollbar-width:thin;
+	scrollbar-color:var(--text-muted) var(--bg-soft);
+}
+:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar{
+	width:8px;
+	height:8px;
+}
+:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-track,
+:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-corner{
+	background:var(--bg-soft);
+}
+:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb{
+	background:var(--line);
+	border-radius:4px;
+}
+:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb:hover{
+	background:var(--text-muted);
+}

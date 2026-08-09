@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         linux.sb helpers
 // @namespace    https://linux.sb/
-// @version      0.0.7
+// @version      0.0.8
 // @description  Markdown（unified；按需 katex/mermaid/shiki；禁 script / javascript:）；跟随站点主题；Ctrl+Enter；主页自动签到；外链增强；GitHub 内联；站内悬浮；图片内联；购买记录≥2条默认折叠
 // @author       steve02081504
 // @homepageURL  https://github.com/steve02081504/linux.sb.js
@@ -1820,7 +1820,7 @@ g.classGroup .title { font-weight: bolder !important; }
 	}
 
 	// src/theme/theme.css
-	var theme_default = "/* \u7AD9\u70B9\u4E3B\u9898\u672A\u58F0\u660E\u3001\u5374\u5E26\u6D45\u8272 fallback \u7684\u53D8\u91CF\uFF0C\u8DDF --panel / --line-soft \u8D70 */\n:root{\n	--card-bg:var(--panel);\n	--bg-soft:var(--line-soft);\n}\n";
+	var theme_default = "/* \u7AD9\u70B9\u4E3B\u9898\u672A\u58F0\u660E\u3001\u5374\u5E26\u6D45\u8272 fallback \u7684\u53D8\u91CF\uFF0C\u8DDF --panel / --line-soft \u8D70 */\n:root{\n	--card-bg:var(--panel);\n	--bg-soft:var(--line-soft);\n}\n\n/* \u6EA2\u51FA\u5BB9\u5668\uFF1A\u7CFB\u7EDF\u9ED8\u8BA4\u6ED1\u5757\u5E38\u8DDF OS \u4E0D\u8DDF\u7AD9\u70B9\uFF0C\u7ED1\u4E3B\u9898\u53D8\u91CF */\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display){\n	scrollbar-width:thin;\n	scrollbar-color:var(--text-muted) var(--bg-soft);\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar{\n	width:8px;\n	height:8px;\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-track,\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-corner{\n	background:var(--bg-soft);\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb{\n	background:var(--line);\n	border-radius:4px;\n}\n:is(.lsb-gh-code-wrap,.lsb-md pre,.lsb-md table,.lsb-md .katex-display)::-webkit-scrollbar-thumb:hover{\n	background:var(--text-muted);\n}\n";
 
 	// src/theme/theme.mjs
 	/**

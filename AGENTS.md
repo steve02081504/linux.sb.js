@@ -130,4 +130,5 @@ build.mjs               # → tab 缩进的 linux.sb.user.js（细节见 docs/bu
 - 不要撤销来源不明的未提交改动
 - 站点主题插件注入 `:root{--bg…}`；脚本勿再 `html.lsb-dark` 覆盖整套变量
 - tip / GitHub 卡用 `--panel` / `--card-bg` / `--text` / `--line` 等，勿用 `Canvas` / `CanvasText`（跟 OS 不跟站点）
+- 溢出容器滑块：`scrollbar-color` + `::-webkit-scrollbar-*` 绑 `--text-muted` / `--line` / `--bg-soft`；系统默认常跟 OS 明暗
 - `themeSwitchSeen` 在 GM 存储；清站点 localStorage 不会重置引导
