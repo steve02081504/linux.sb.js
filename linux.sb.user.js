@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         linux.sb helpers
 // @namespace    https://linux.sb/
-// @version      0.0.8
+// @version      0.0.9
 // @description  Markdown（unified；按需 katex/mermaid/shiki；禁 script / javascript:）；跟随站点主题；Ctrl+Enter；主页自动签到；外链增强；GitHub 内联；站内悬浮；图片内联；购买记录≥2条默认折叠
 // @author       steve02081504
 // @homepageURL  https://github.com/steve02081504/linux.sb.js
@@ -324,8 +324,70 @@
 		return task;
 	}
 
+	// src/shiki/shiki.mjs
+	var SHIKI_URL = "https://esm.sh/shiki@3";
+	/** @type {Promise<Function> | null} */
+	var codeToHtmlCache = null;
+	/**
+	 * 按站点 `--bg` 亮度判断背景是否偏暗。
+	 * @returns {boolean} 是否深色
+	 */
+	function siteIsDark() {
+		const raw = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+		const match = raw.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+		if (!match) return false;
+		let hex = match[1];
+		if (hex.length === 3) hex = [...hex].map((c) => c + c).join("");
+		/**
+		 * @param {number} index hex 字符串起始下标
+		 * @returns {number} 0–1 归一化通道值
+		 */
+		const channel = (index) => parseInt(hex.slice(index, index + 2), 16) / 255;
+		return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4) < 0.45;
+	}
+	/**
+	 * 懒加载 Shiki `codeToHtml`（全页共享一次）。
+	 * @returns {Promise<Function>} codeToHtml
+	 */
+	function loadCodeToHtml() {
+		if (!codeToHtmlCache) {
+			codeToHtmlCache = import(SHIKI_URL).then((m) => m.codeToHtml);
+			codeToHtmlCache.catch(() => {
+				codeToHtmlCache = null;
+			});
+		}
+		return codeToHtmlCache;
+	}
+	/**
+	 * 用站点明暗主题高亮代码；未知语言回退纯文本。
+	 * @param {string} text 源码
+	 * @param {string} [lang='text'] Shiki 语言 id / 别名
+	 * @returns {Promise<string>} Shiki HTML
+	 */
+	async function highlightCode(text, lang = "text") {
+		const codeToHtml = await loadCodeToHtml();
+		const theme = siteIsDark() ? "github-dark" : "github-light";
+		try {
+			return await codeToHtml(text, { lang, theme });
+		} catch {
+			return await codeToHtml(text, { lang: "text", theme });
+		}
+	}
+	/**
+	 * 从文件路径猜 Shiki 语言（扩展名多为别名，如 `ps1` → powershell）。
+	 * @param {string} path 仓库内路径
+	 * @returns {string} 语言 id
+	 */
+	function langFromPath(path) {
+		const base = (path.split("/").pop() || "").toLowerCase();
+		if (base === "dockerfile") return "dockerfile";
+		if (base === "makefile" || base === "gnumakefile") return "makefile";
+		const dot = base.lastIndexOf(".");
+		return dot < 0 ? "text" : base.slice(dot + 1) || "text";
+	}
+
 	// src/github/github.css
-	var github_default = ".lsb-gh{\n	display:block;\n	margin:.55em 0;\n	max-width:min(100%,720px);\n}\n.lsb-gh-card{\n	margin-top:.45em;\n	padding:10px 12px;\n	border:1px solid var(--line);\n	border-radius:10px;\n	background:var(--card-bg);\n	color:var(--text);\n	font:13px/1.45 system-ui,sans-serif;\n}\n.lsb-gh-card.lsb-gh-loading{opacity:.7}\n.lsb-gh-head{\n	display:flex;\n	flex-wrap:wrap;\n	gap:6px 10px;\n	align-items:baseline;\n}\n.lsb-gh-name{font-weight:700;word-break:break-word}\n.lsb-gh-meta{\n	margin-top:4px;\n	color:var(--text-muted);\n	font-size:12px;\n}\n.lsb-gh-desc{\n	margin-top:6px;\n	color:var(--text-subtle);\n	white-space:pre-wrap;\n	word-break:break-word;\n}\n.lsb-gh-stats{\n	display:flex;\n	flex-wrap:wrap;\n	gap:8px 12px;\n	margin-top:8px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n.lsb-gh-topics{\n	display:flex;\n	flex-wrap:wrap;\n	gap:4px;\n	margin-top:8px;\n}\n.lsb-gh-topic{\n	padding:1px 7px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge{\n	display:inline-block;\n	padding:1px 6px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge-open{background:var(--success-soft);color:var(--success)}\n.lsb-gh-badge-closed{background:var(--danger-soft);color:var(--danger)}\n.lsb-gh-badge-merged{background:var(--info-soft);color:var(--info)}\n.lsb-gh-badge-draft{background:var(--bg-soft);color:var(--text-muted)}\n.lsb-gh-add{color:var(--success)}\n.lsb-gh-del{color:var(--danger)}\n.lsb-gh-code-wrap{\n	margin-top:8px;\n	border:1px solid var(--line);\n	border-radius:8px;\n	overflow:auto;\n	max-height:420px;\n	background:var(--bg-soft);\n}\n.lsb-gh-code{\n	margin:0;\n	padding:8px 0;\n	font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;\n	white-space:pre;\n	tab-size:4;\n}\n.lsb-gh-line{\n	display:block;\n	padding:0 12px 0 0;\n}\n.lsb-gh-line:hover{background:color-mix(in srgb, var(--text) 6%, transparent)}\n.lsb-gh-ln{\n	display:inline-block;\n	width:3.2em;\n	margin-right:10px;\n	padding-left:10px;\n	text-align:right;\n	color:var(--text-disabled);\n	user-select:none;\n	vertical-align:top;\n}\n.lsb-gh-more{\n	margin-top:6px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n";
+	var github_default = ".lsb-gh{\n	display:block;\n	margin:.55em 0;\n	max-width:min(100%,720px);\n}\n.lsb-gh-card{\n	margin-top:.45em;\n	padding:10px 12px;\n	border:1px solid var(--line);\n	border-radius:10px;\n	background:var(--card-bg);\n	color:var(--text);\n	font:13px/1.45 system-ui,sans-serif;\n}\n.lsb-gh-card.lsb-gh-loading{opacity:.7}\n.lsb-gh-head{\n	display:flex;\n	flex-wrap:wrap;\n	gap:6px 10px;\n	align-items:baseline;\n}\n.lsb-gh-name{font-weight:700;word-break:break-word}\n.lsb-gh-meta{\n	margin-top:4px;\n	color:var(--text-muted);\n	font-size:12px;\n}\n.lsb-gh-desc{\n	margin-top:6px;\n	color:var(--text-subtle);\n	white-space:pre-wrap;\n	word-break:break-word;\n}\n.lsb-gh-stats{\n	display:flex;\n	flex-wrap:wrap;\n	gap:8px 12px;\n	margin-top:8px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n.lsb-gh-topics{\n	display:flex;\n	flex-wrap:wrap;\n	gap:4px;\n	margin-top:8px;\n}\n.lsb-gh-topic{\n	padding:1px 7px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge{\n	display:inline-block;\n	padding:1px 6px;\n	border-radius:999px;\n	background:var(--bg-soft);\n	font-size:11px;\n}\n.lsb-gh-badge-open{background:var(--success-soft);color:var(--success)}\n.lsb-gh-badge-closed{background:var(--danger-soft);color:var(--danger)}\n.lsb-gh-badge-merged{background:var(--info-soft);color:var(--info)}\n.lsb-gh-badge-draft{background:var(--bg-soft);color:var(--text-muted)}\n.lsb-gh-add{color:var(--success)}\n.lsb-gh-del{color:var(--danger)}\n.lsb-gh-code-wrap{\n	margin-top:8px;\n	border:1px solid var(--line);\n	border-radius:8px;\n	overflow:auto;\n	max-height:420px;\n	background:var(--bg-soft);\n	counter-reset:lsb-ln calc(var(--lsb-ln-start, 1) - 1);\n}\n.lsb-gh-code{\n	margin:0;\n	padding:8px 0;\n	font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;\n	white-space:pre;\n	tab-size:4;\n}\n.lsb-gh-code-wrap .shiki{\n	background:transparent!important;\n}\n.lsb-gh-line,\n.lsb-gh-code-wrap .line{\n	display:block;\n	padding:0 12px 0 0;\n}\n.lsb-gh-line:hover,\n.lsb-gh-code-wrap .line:hover{background:color-mix(in srgb, var(--text) 6%, transparent)}\n.lsb-gh-ln,\n.lsb-gh-code-wrap .line::before{\n	display:inline-block;\n	width:3.2em;\n	margin-right:10px;\n	padding-left:10px;\n	text-align:right;\n	color:var(--text-disabled);\n	user-select:none;\n	vertical-align:top;\n}\n.lsb-gh-code-wrap .line::before{\n	counter-increment:lsb-ln;\n	content:counter(lsb-ln);\n}\n.lsb-gh-more{\n	margin-top:6px;\n	font-size:12px;\n	color:var(--text-muted);\n}\n";
 
 	// src/github/github.mjs
 	/**
@@ -574,12 +636,47 @@
 		return elem("span", className, label);
 	}
 	/**
+	 * 将纯文本行写入代码容器（Shiki 不可用时回退）。
+	 * @param {HTMLElement} wrap 代码容器
+	 * @param {string[]} lines 行内容
+	 * @param {number} start 起始行号
+	 * @returns {void}
+	 */
+	function fillPlainCode(wrap, lines, start) {
+		const pre = elem("pre", "lsb-gh-code");
+		for (let index = 0; index < lines.length; index++) {
+			const row = elem("span", "lsb-gh-line");
+			row.append(elem("span", "lsb-gh-ln", String(start + index)), document.createTextNode(lines[index] || " "));
+			pre.append(row);
+		}
+		wrap.replaceChildren(pre);
+	}
+	/**
+	 * 高亮后填入代码容器；失败则纯文本。行号用 CSS counter（`--lsb-ln-start`）。
+	 * @param {HTMLElement} wrap 代码容器
+	 * @param {{lines: string[], start: number, path: string}} data 文件片段
+	 * @returns {Promise<void>}
+	 */
+	async function fillHighlightedCode(wrap, data) {
+		wrap.style.setProperty("--lsb-ln-start", String(data.start));
+		try {
+			const html = await highlightCode(data.lines.join("\n"), langFromPath(data.path));
+			const template = document.createElement("template");
+			template.innerHTML = html;
+			const pre = template.content.querySelector("pre");
+			pre.classList.add("lsb-gh-code");
+			wrap.replaceChildren(pre);
+		} catch {
+			fillPlainCode(wrap, data.lines, data.start);
+		}
+	}
+	/**
 	 * 将 GitHub 卡片数据渲染到容器。
 	 * @param {HTMLElement} card 卡片容器
 	 * @param {object | null} data 卡片数据
-	 * @returns {void} 无返回值
+	 * @returns {Promise<void>} 无返回值
 	 */
-	function renderGithubCard(card, data) {
+	async function renderGithubCard(card, data) {
 		card.replaceChildren();
 		card.classList.remove("lsb-gh-loading");
 		if (!data) {
@@ -661,18 +758,12 @@
 				return;
 			}
 			const wrap = elem("div", "lsb-gh-code-wrap");
-			const pre = elem("pre", "lsb-gh-code");
-			for (let index = 0; index < data.lines.length; index++) {
-				const row = elem("span", "lsb-gh-line");
-				row.append(elem("span", "lsb-gh-ln", String(data.start + index)), document.createTextNode(data.lines[index] || " "));
-				pre.append(row);
-			}
-			wrap.append(pre);
 			card.append(wrap);
 			if (data.truncated) {
 				const note = data.ranged ? `\u5DF2\u622A\u65AD\uFF0C\u5171 ${data.total} \u884C` : `\u9884\u89C8\u524D ${data.end} \u884C\uFF0C\u5171 ${data.total} \u884C`;
 				card.append(elem("div", "lsb-gh-more", note));
 			}
+			await fillHighlightedCode(wrap, data);
 		}
 	}
 	/**
@@ -686,10 +777,10 @@
 		const card = elem("div", "lsb-gh-card lsb-gh-loading", "\u52A0\u8F7D\u4E2D\u2026");
 		host.append(card);
 		titleEl.textContent = ghLabel(info);
-		loadGithubCard(info).then((data) => {
+		loadGithubCard(info).then(async (data) => {
 			if (data?.title)
 				titleEl.textContent = data.title;
-			renderGithubCard(card, data);
+			await renderGithubCard(card, data);
 		}).catch(() => {
 			renderGithubCard(card, null);
 		});
@@ -1028,7 +1119,6 @@ ${url}`;
 		rehypeStringify: "https://esm.sh/rehype-stringify@10",
 		rehypeKatex: "https://esm.sh/rehype-katex@7",
 		mermaid: "https://esm.sh/mermaid@11",
-		shiki: "https://esm.sh/shiki@3",
 		visit: "https://esm.sh/unist-util-visit@5",
 		fromHtml: "https://esm.sh/hast-util-from-html@2",
 		toString: "https://esm.sh/hast-util-to-string@3"
@@ -1257,31 +1347,13 @@ g.classGroup .title { font-weight: bolder !important; }
 		};
 	}
 	/**
-	 * 按站点 `--bg` 亮度选 Shiki 主题。
-	 * @returns {boolean} 背景是否偏暗
-	 */
-	function siteIsDark() {
-		const raw = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
-		const match = raw.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
-		if (!match) return false;
-		let hex = match[1];
-		if (hex.length === 3) hex = [...hex].map((c) => c + c).join("");
-		/**
-		 * @param {number} index hex 字符串起始下标
-		 * @returns {number} 0–1 归一化通道值
-		 */
-		const channel = (index) => parseInt(hex.slice(index, index + 2), 16) / 255;
-		return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4) < 0.45;
-	}
-	/**
 	 * 创建 rehype 插件，用 Shiki 高亮代码块。
-	 * @param {Function} codeToHtml Shiki codeToHtml
 	 * @param {Function} visit unist-util-visit
 	 * @param {Function} fromHtml hast-util-from-html
 	 * @param {Function} toString hast-util-to-string
 	 * @returns {() => (tree: object) => Promise<void>} rehype 异步插件工厂
 	 */
-	function rehypeShiki(codeToHtml, visit, fromHtml, toString) {
+	function rehypeShiki(visit, fromHtml, toString) {
 		return () => async (tree) => {
 			const targets = [];
 			visit(tree, "element", (node, index, parent) => {
@@ -1292,6 +1364,7 @@ g.classGroup .title { font-weight: bolder !important; }
 				if (lang === "mermaid") return;
 				targets.push({ index, parent, lang, text: toString(code).replace(/\n$/, "") });
 			});
+			const codeToHtml = await loadCodeToHtml();
 			const theme = siteIsDark() ? "github-dark" : "github-light";
 			for (const t of [...targets].sort((a, b) => b.index - a.index)) {
 				let html;
@@ -1377,10 +1450,7 @@ g.classGroup .title { font-weight: bolder !important; }
 					const { default: mermaid } = await import(ESM.mermaid);
 					processor = processor.use(rehypeMermaid(mermaid, visit, fromHtml, toString));
 				}
-				if (feat.code) {
-					const { codeToHtml } = await import(ESM.shiki);
-					processor = processor.use(rehypeShiki(codeToHtml, visit, fromHtml, toString));
-				}
+				if (feat.code) processor = processor.use(rehypeShiki(visit, fromHtml, toString));
 			}
 			return processor.use(rehypeStringify);
 		})();

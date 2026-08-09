@@ -19,7 +19,7 @@
 - 回复列表 AJAX 追加 → `MutationObserver` 处理新 `.post-content`
 - 外站标题：`GM_xmlhttpRequest` + `@connect *`；favicon 用 Google s2
 - 站内悬浮卡：同源 `fetch`；同页楼层优先读 DOM
-- GitHub（`classifyGithub`）：`api.github.com`（需 `User-Agent`，匿名约 60 req/h，进 `ghCache`）；文件走 `raw.githubusercontent.com`（`#L12` / `#L12-L20`）；`blob/.../*.png` 是 HTML 页勿当图；卡片用 `textContent` / 自建 DOM（`.lsb-gh`），勿走 `fetchMeta`
+- GitHub（`classifyGithub`）：`api.github.com`（需 `User-Agent`，匿名约 60 req/h，进 `ghCache`）；文件走 `raw.githubusercontent.com`（`#L12` / `#L12-L20`）；`blob/.../*.png` 是 HTML 页勿当图；卡片用 `textContent` / 自建 DOM（`.lsb-gh`），勿走 `fetchMeta`；文件预览按路径懒加载 Shiki（与 Markdown 共用 `src/shiki`），CDN 挂则纯文本回退
 
 ## 源码与构建
 
@@ -37,6 +37,7 @@ src/
   linkify/              # 外链增强（walk / enhance）
   tip/                  # 站内悬浮卡
   github/               # GitHub 卡片
+  shiki/                # 共享 Shiki（Markdown + GitHub 文件预览）
   orders/               # 虚拟卡购买记录折叠
   submit/               # Ctrl+Enter
   checkin/              # 主页侧栏自动签到
@@ -111,8 +112,8 @@ build.mjs               # → tab 缩进的 linux.sb.user.js（细节见 docs/bu
 3. 悬停 `@用户`、`@用户 #楼`、作者名、主题链 → 用户卡 / 楼层 / 主题摘要
 4. 登录 / 搜索 / 回复：Ctrl+Enter 点到对应 submit
 5. AJAX 新楼层同样生效
-6. GitHub：仓库 / Issue·PR / commit / blob 行范围；图片走 raw
-7. 主题：跟站点配色；首次未开过 `/theme_switch` 会跳转；`--card-bg` / `--bg-soft` 有映射
+6. GitHub：仓库 / Issue·PR / commit / blob 行范围；图片走 raw；文件预览有 Shiki 高亮（扩展名识别，含 `ps1`）
+7. 主题：跟站点配色；首次未开过 `/theme_switch` 会跳转；`--card-bg` / `--bg-soft` 有映射；代码区滑块跟主题
 8. 虚拟卡购买记录：≥2 条默认折叠；`?vc_page=` 分页自动展开
 9. 主页：未签到时侧栏签到按钮被自动点一次；已签到（`.daily-checkin-done`）则无动作
 10. 推 `master` 后 raw 的 `@version` 已升高

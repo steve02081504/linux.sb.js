@@ -1,3 +1,5 @@
+import { loadCodeToHtml, siteIsDark } from '../shiki/shiki.mjs'
+
 import css from './markdown.css'
 
 /**
@@ -15,7 +17,6 @@ const ESM = {
 	rehypeStringify: 'https://esm.sh/rehype-stringify@10',
 	rehypeKatex: 'https://esm.sh/rehype-katex@7',
 	mermaid: 'https://esm.sh/mermaid@11',
-	shiki: 'https://esm.sh/shiki@3',
 	visit: 'https://esm.sh/unist-util-visit@5',
 	fromHtml: 'https://esm.sh/hast-util-from-html@2',
 	toString: 'https://esm.sh/hast-util-to-string@3',
@@ -251,32 +252,13 @@ function rehypeMermaid(mermaid, visit, fromHtml, toString) {
 }
 
 /**
- * 按站点 `--bg` 亮度选 Shiki 主题。
- * @returns {boolean} 背景是否偏暗
- */
-function siteIsDark() {
-	const raw = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
-	const match = raw.match(/^#([\da-f]{3}|[\da-f]{6})$/i)
-	if (!match) return false
-	let hex = match[1]
-	if (hex.length === 3) hex = [...hex].map(c => c + c).join('')
-	/**
-	 * @param {number} index hex 字符串起始下标
-	 * @returns {number} 0–1 归一化通道值
-	 */
-	const channel = index => parseInt(hex.slice(index, index + 2), 16) / 255
-	return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4) < 0.45
-}
-
-/**
  * 创建 rehype 插件，用 Shiki 高亮代码块。
- * @param {Function} codeToHtml Shiki codeToHtml
  * @param {Function} visit unist-util-visit
  * @param {Function} fromHtml hast-util-from-html
  * @param {Function} toString hast-util-to-string
  * @returns {() => (tree: object) => Promise<void>} rehype 异步插件工厂
  */
-function rehypeShiki(codeToHtml, visit, fromHtml, toString) {
+function rehypeShiki(visit, fromHtml, toString) {
 	return () => async tree => {
 		const targets = []
 		visit(tree, 'element', (node, index, parent) => {
@@ -287,6 +269,7 @@ function rehypeShiki(codeToHtml, visit, fromHtml, toString) {
 			if (lang === 'mermaid') return
 			targets.push({ index, parent, lang, text: toString(code).replace(/\n$/, '') })
 		})
+		const codeToHtml = await loadCodeToHtml()
 		const theme = siteIsDark() ? 'github-dark' : 'github-light'
 		for (const t of [...targets].sort((a, b) => b.index - a.index)) {
 			let html
@@ -378,10 +361,7 @@ async function getProcessor(feat) {
 				const { default: mermaid } = await import(ESM.mermaid)
 				processor = processor.use(rehypeMermaid(mermaid, visit, fromHtml, toString))
 			}
-			if (feat.code) {
-				const { codeToHtml } = await import(ESM.shiki)
-				processor = processor.use(rehypeShiki(codeToHtml, visit, fromHtml, toString))
-			}
+			if (feat.code) processor = processor.use(rehypeShiki(visit, fromHtml, toString))
 		}
 
 		return processor.use(rehypeStringify)
