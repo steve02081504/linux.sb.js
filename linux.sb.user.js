@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         linux.sb helpers
 // @namespace    https://linux.sb/
-// @version      0.0.3
+// @version      0.0.4
 // @description  Markdown（unified；按需 katex/mermaid/shiki；禁 script / javascript:）；深色模式（默认开）；Ctrl+Enter；外链增强；GitHub 内联；站内悬浮；图片内联
 // @author       steve02081504
 // @homepageURL  https://github.com/steve02081504/linux.sb.js
@@ -1139,9 +1139,15 @@ defs [id$="-barbEnd"] {
 [id$="-extensionStart"], [id$="-extensionEnd"], [id$="-aggregationStart"], [id$="-aggregationEnd"] { fill: transparent !important; }
 [id$="-lollipopStart"], [id$="-lollipopEnd"] { fill: var(--panel) !important; }
 
-.edgeLabel .label rect, .stateLabel .box, .classLabel .box {
+/* mermaid \u9ED8\u8BA4\u7ED9 #id .edgeLabel p \u5199\u6B7B\u6D45\u8272\u5E95\uFF1Bhtml label \u9760 background-color\uFF0C\u4E0D\u662F rect fill */
+.edgeLabel, .edgeLabel p, .edgeLabel span, .labelBkg {
+	background-color: var(--panel) !important;
+	color: var(--text) !important;
+}
+.edgeLabel rect, .edgeLabel .label rect, .edgeLabel .label-container,
+.stateLabel .box, .classLabel .box {
 	fill: var(--panel) !important;
-	opacity: 0.5 !important;
+	opacity: 1 !important;
 	stroke: none !important;
 }
 .divider, g.classGroup line { stroke: var(--text) !important; stroke-opacity: 0.35 !important; }

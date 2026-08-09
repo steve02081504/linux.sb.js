@@ -147,9 +147,15 @@ defs [id$="-barbEnd"] {
 [id$="-extensionStart"], [id$="-extensionEnd"], [id$="-aggregationStart"], [id$="-aggregationEnd"] { fill: transparent !important; }
 [id$="-lollipopStart"], [id$="-lollipopEnd"] { fill: var(--panel) !important; }
 
-.edgeLabel .label rect, .stateLabel .box, .classLabel .box {
+/* mermaid 默认给 #id .edgeLabel p 写死浅色底；html label 靠 background-color，不是 rect fill */
+.edgeLabel, .edgeLabel p, .edgeLabel span, .labelBkg {
+	background-color: var(--panel) !important;
+	color: var(--text) !important;
+}
+.edgeLabel rect, .edgeLabel .label rect, .edgeLabel .label-container,
+.stateLabel .box, .classLabel .box {
 	fill: var(--panel) !important;
-	opacity: 0.5 !important;
+	opacity: 1 !important;
 	stroke: none !important;
 }
 .divider, g.classGroup line { stroke: var(--text) !important; stroke-opacity: 0.35 !important; }
