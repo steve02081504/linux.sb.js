@@ -5,11 +5,12 @@
 ## 改代码前先看
 
 - 站点 DOM（实测）：
-  - 帖文容器：`.post-content`
+  - 帖文容器：`.post-content`（主题楼层是转义文本 + `<br>`；`@用户` 可能已是 `<a>`）
+  - 通知：`.post-content.notification-content`（已有真实 HTML `<a>`，勿 Markdown 重渲）
   - 回复区：`#reply`，登录后表单多为 `.ajax-reply-form`，正文 `textarea[name=body]`
   - submit：`button[type=submit]` / `input[type=submit]` / 无 `type` 的 `button`（在 form 内默认 submit）
   - 主题 URL：`/topic/{id}`；带楼层：`/topic/{id}?floor={n}`（`@用户 #楼层` 常见形态）
-  - 用户页：`/user/{id}` 或 `/user?username=…`；资料在侧栏 `.user-card`（`.user-name` / `.user-rank` / `.avatar-img`）
+  - 用户页：`/user/{id}` 或 `/user?username=…`；资料在侧栏 `.user-card`（`.user-name` / `.user-rank` / `.avatar-img`）；通知 tab=`notifications`
   - 主题头：`.post-content-title`、`.post-content-stats`；楼层节点：`.post-item[data-floor]`
 - 回复列表会 AJAX 追加，必须靠 `MutationObserver` 处理新 `.post-content`
 - 外站标题：`GM_xmlhttpRequest` + `@connect *`；favicon 用 Google s2
@@ -62,7 +63,7 @@ build.mjs               # esbuild → tab 缩进的 linux.sb.user.js
 - 站点 CSS 主题色全在 `:root` 变量（`--bg` / `--panel` / `--text` / `--brand`…）；深色模式用 `html.lsb-dark` 覆盖即可，勿硬刷元素色
 - 站点部分样式用了未在 `:root` 声明的变量并带浅色 fallback（如 `var(--card-bg,#fff)` / `var(--bg-soft,#f7f7f7)`，发帖页 `.topic-type-choice` / `.topic-type-panel`）；深色必须在 `theme.css` 一并定义，否则永远回退白底
 - 外链增强用 `data-lsb`；悬浮绑定用 `data-lsb-tip`，禁止重复挂监听
-- Markdown：`.post-content` 先 `innerText` 取源；CDN 拉轻量 unified 管线（remark-gfm/breaks → rehype → fount 规则 hast 消毒 → stringify）；正文含 `$…$` / mermaid 围栏 / 其它代码围栏时再懒加载 katex、mermaid、shiki；`data-lsb-md` 防重复
+- Markdown：`.post-content` 先 `innerText` 取源（跳过 `.notification-content`）；CDN 拉轻量 unified 管线（remark-gfm/breaks → rehype → fount 规则 hast 消毒 → stringify）；正文含 `$…$` / mermaid 围栏 / 其它代码围栏时再懒加载 katex、mermaid、shiki；`data-lsb-md` 防重复
 - 不把 unified 栈打进产物；不整抄 fount convertor（无执行按钮/DaisyUI/embed）
 - 消毒在 rehype 早期做（与 fount `sanitizeHtml` 标签/URL 规则对齐），mermaid 产出的 SVG 在消毒之后插入，避免被剥掉
 - 只 linkify / 内联增强外站 `http(s)`；站内链做悬浮预览，不改成外链样式
@@ -134,6 +135,7 @@ build.mjs               # esbuild → tab 缩进的 linux.sb.user.js
 
 - 站点不会自动把裸 `https://…` 变成 `<a>`，linkify 是脚本自己的职责
 - 站点正文是转义文本 + `<br>`，不是 HTML；Markdown 必须从 `innerText` 还原换行后再 parse
+- `.notification-content` 已是带主题链的 HTML；对其 `innerText`→Markdown 会抹掉 `<a>`（提及里的 `# …` 还会被当成标题）
 - `@用户 #N` 指向的是楼层 URL，不是用户主页；预览应按 `floor` 解帖
 - `button:not([type])` 在 form 外不是 submit；找最近按钮时优先 `closest('form')` 内候选
 - 拉标题 / 悬浮失败应静默回退，不要 toast 刷屏

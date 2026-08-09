@@ -389,6 +389,8 @@ function sourceFromPost(post) {
  */
 export async function renderMarkdown(post) {
 	if (post.dataset.lsbMd) return
+	// 通知已是带 <a> 的 HTML；innerText 重渲会抹掉链接
+	if (post.classList.contains('notification-content')) return
 	post.dataset.lsbMd = '1'
 	const src = sourceFromPost(post)
 	if (!src) return

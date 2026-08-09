@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         linux.sb helpers
 // @namespace    https://linux.sb/
-// @version      0.0.4
+// @version      0.0.5
 // @description  Markdown（unified；按需 katex/mermaid/shiki；禁 script / javascript:）；深色模式（默认开）；Ctrl+Enter；外链增强；GitHub 内联；站内悬浮；图片内联
 // @author       steve02081504
 // @homepageURL  https://github.com/steve02081504/linux.sb.js
@@ -1369,6 +1369,7 @@ g.classGroup .title { font-weight: bolder !important; }
 	 */
 	async function renderMarkdown(post) {
 		if (post.dataset.lsbMd) return;
+		if (post.classList.contains("notification-content")) return;
 		post.dataset.lsbMd = "1";
 		const src = sourceFromPost(post);
 		if (!src) return;
